@@ -158,7 +158,7 @@ public class VoiceChatTeleBot extends TelegramLongPollingBot {
             }
 
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            VoiceChatTeleBot bot = new VoiceChatTeleBot("token");
+            VoiceChatTeleBot bot = new VoiceChatTeleBot(token);
             botsApi.registerBot(bot);
 
             List<BotCommand> commandList = new ArrayList<>();
