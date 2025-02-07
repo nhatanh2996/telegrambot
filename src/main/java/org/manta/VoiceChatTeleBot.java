@@ -1,21 +1,13 @@
 package org.manta;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.TelegramBotsApi;
-import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendVoice;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
-import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class VoiceChatTeleBot extends TelegramLongPollingBot {
@@ -25,12 +17,14 @@ public class VoiceChatTeleBot extends TelegramLongPollingBot {
 
     }
 
-    private static final String DEFAULT_PATH_MP3 = "src/main/resources/media/mp3";
-    private static final String DEFAULT_PATH_VOICE_CHAT = "src/main/resources/media/voice_chat";
+    public String getMediaPath() {
+        return System.getProperty("media", "media");
+    }
+
 
     @Override
     public String getBotUsername() {
-        return "MantaVoiceChatBot" ;
+        return "MantaVoiceChatBot";
     }
 
 
@@ -74,6 +68,8 @@ public class VoiceChatTeleBot extends TelegramLongPollingBot {
     }
 
     private void sendVoiceMessageWithMp3Conversion(long chatId, String command) {
+        String DEFAULT_PATH_MP3 = getMediaPath() + "/mp3/";
+        String DEFAULT_PATH_VOICE_CHAT = getMediaPath() + "/voice_chat/";
         File mp3File = new File(DEFAULT_PATH_MP3.concat(command).concat(".mp3"));
         File oggFile = new File(DEFAULT_PATH_VOICE_CHAT.concat(command).concat(".ogg"));
 
@@ -134,7 +130,7 @@ public class VoiceChatTeleBot extends TelegramLongPollingBot {
         }
     }
 
-    private static List<String> getListNameFileIncludeExt(String folderPath) {
+    public static List<String> getListNameFileIncludeExt(String folderPath) {
         File folder = new File(folderPath);
         File[] listOfFiles = folder.listFiles();
         if (listOfFiles != null) {
@@ -144,36 +140,5 @@ public class VoiceChatTeleBot extends TelegramLongPollingBot {
         }
     }
 
-    public static void main(String[] args) {
 
-        try {
-            String configPath = "src/main/resources/config.yml";
-            InputStream inputStream = Files.newInputStream(Paths.get(configPath));
-           Yaml yaml = new Yaml();
-            Map<String, Object> config = yaml.load(inputStream);
-            Map<String, Object> botConfig = (Map<String, Object>) config.get("bot");
-            String token = (String) botConfig.get("token");
-            if(token == null || token.isEmpty()){
-                throw new RuntimeException("token is empty");
-            }
-
-            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            VoiceChatTeleBot bot = new VoiceChatTeleBot(token);
-            botsApi.registerBot(bot);
-
-            List<BotCommand> commandList = new ArrayList<>();
-            commandList.add(new BotCommand("/start", "Start the bot"));
-            Objects.requireNonNull(getListNameFileIncludeExt(DEFAULT_PATH_MP3)).forEach(command -> commandList.add(new BotCommand("/" + command, "Voice message")));
-            try {
-                bot.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
 }
